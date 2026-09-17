@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lingyuan Laoshi - Bài tập</title>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.3/dist/index.js"></script>
+<style>
+:root{--cream:#fff8df;--orange:#f59f34;--deep:#b95000;--earth:#9b5b16;--brown:#7b270b;--card:#fffef7;--ink:#392313;--green:#68b36d;}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:radial-gradient(circle at top left,#fff5d5,#ffe7b4 45%,#ffd083);color:var(--ink);min-height:100vh}
+.app{max-width:1100px;margin:auto;padding:16px}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 20px;border-radius:22px;background:linear-gradient(135deg,#fffdf1,#ffe3a5 72%,#ffc56d);box-shadow:0 10px 26px rgba(123,39,11,.18);margin-bottom:14px}
+.hero h1{font-size:22px;margin:0;color:var(--brown);font-family:Georgia,serif}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px;padding:12px;border-radius:18px;background:rgba(255,255,255,.6)}
+button{border:0;border-radius:999px;padding:10px 15px;background:linear-gradient(135deg,#ffb14d,#df6d00);color:#fff;font-weight:800;cursor:pointer;font-size:14px}
+button.secondary{background:#fff6df;color:var(--deep);border:1px solid #f3bd72}
+button.ghost{background:#fff;color:var(--earth);border:1px solid #ffd08a}
+select,textarea,input[type=text]{font:inherit;border:1px solid #f2bd74;border-radius:14px;padding:9px 11px;background:#fffdf8;color:var(--ink)}
+.score{margin-left:auto;font-weight:900;color:var(--brown);background:#fff5d5;padding:9px 15px;border-radius:999px;font-size:.85rem}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tab{background:#fff6df;color:var(--deep);border:1px solid #f3bd72}
+.tab.active{background:linear-gradient(135deg,#9b5b16,#7b270b);color:#fff;border-color:transparent}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:var(--card);border-radius:20px;padding:20px;box-shadow:0 10px 24px rgba(112,61,16,.13);border:1px solid rgba(185,80,0,.12);margin-bottom:14px}
+.card h2{margin-top:0;color:var(--deep)}
+.hanzi{font-size:64px;text-align:center;color:var(--brown);font-weight:900;margin:10px 0}
+.pinyin{font-size:20px;color:var(--deep);font-weight:800;text-align:center}
+.meaning{text-align:center;font-size:17px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{display:block;width:100%;text-align:left;background:#fff7e4;color:var(--brown);border:2px solid #ffd391;border-radius:14px;padding:12px}
+.option.correct{background:#e8ffe7;border-color:var(--green);color:#206230}
+.option.wrong{background:#ffe8df;border-color:#df6d50;color:#9c2d1a}
+.feedback{min-height:26px;font-weight:900;text-align:center;font-size:17px;margin:8px 0;color:var(--deep)}
+.setup textarea{width:100%;min-height:50px;font-family:monospace;font-size:.82rem}
+.setup-hint{font-size:.75rem;color:var(--brown);line-height:1.5;margin-bottom:6px}
+.word-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:8px}
+.word{padding:12px;border-radius:14px;background:#fff8e8;border:1px solid #ffd391;text-align:center;cursor:pointer}
+.word b{font-size:26px;color:var(--brown);display:block}
+.word small{color:var(--deep);font-weight:800}
+.batch-title{font-weight:900;color:var(--earth);margin:14px 0 4px;font-size:.85rem}
+.pieces,.answer{display:flex;gap:8px;flex-wrap:wrap;min-height:50px;padding:10px;border-radius:14px;background:#fff7e4;border:1px dashed #d98629}
+.piece{padding:8px 12px;background:#fff;border-radius:10px;border:1px solid #ffc370;font-size:20px;font-weight:900;cursor:pointer}
+.writer-wrap{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.progress{text-align:center;font-weight:800;color:var(--earth);margin-bottom:6px}
+.empty{text-align:center;color:#a3937c;padding:24px}
+.tag{display:inline-block;background:#fff0d0;color:var(--earth);border-radius:999px;padding:3px 10px;font-size:.72rem;font-weight:800}
+.sticky-top{position:sticky;top:0;z-index:40;background:#ffe7b4;padding-top:4px;margin-bottom:14px}
+.qcard{background:var(--card);border-radius:16px;padding:14px 16px;box-shadow:0 6px 16px rgba(112,61,16,.1);border:1px solid rgba(185,80,0,.12);margin-bottom:12px}
+.qcard .qhead{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:800;color:var(--earth)}
+.qcard .qhanzi{font-size:34px;font-weight:900;color:var(--brown)}
+.mini-btn{padding:6px 12px;font-size:13px;border-radius:999px}
+.gp-box{background:#fff0d0;border-left:4px solid var(--deep);border-radius:10px;padding:12px 14px;margin-top:12px}
+.gp-title{font-weight:900;color:var(--brown);margin-bottom:4px;font-size:1.05rem}
+.gp-desc{margin-bottom:8px;line-height:1.5}
+.gp-pattern{font-family:monospace;background:#fff;border:1px solid #f2bd74;border-radius:8px;padding:6px 10px;margin-bottom:4px;font-size:.9rem}
+.writer-mini{text-align:center}
+.writer-mini > div:first-child{width:170px;height:170px;background:#fff;border:3px solid var(--deep);margin:auto}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sticky-top">
+  <div class="hero">
+    <h1>📝 Lingyuan Laoshi - Bài tập</h1>
+  </div>
+
+  <div class="toolbar">
+    <button onclick="speak('你好')">🔊 Bật âm thanh</button>
+    <label>Giọng đọc <select id="voiceSelect"><option value="0">Giọng 1</option><option value="1">Giọng 2</option></select></label>
+    <label>Tốc độ <select id="rateSelect">
+      <option value="0.25">Rất chậm (0.25x)</option>
+      <option value="0.5">Chậm (0.5x)</option>
+      <option value="1" selected>Bình thường (1x)</option>
+    </select></label>
+    <button class="secondary" onclick="shuffleAll()">🔄 Đổi câu hỏi</button>
+    <button class="ghost" onclick="toggleSetup()">⚙️ Quản lý từ vựng</button>
+    <div class="score">🏆 Điểm: <span id="score">0</span> &nbsp;|&nbsp; 🧩 Đã làm: <span id="doneCount">0</span> &nbsp;|&nbsp; ✅ Đúng: <span id="correctCount">0</span> &nbsp;|&nbsp; ❌ Sai: <span id="wrongCount">0</span></div>
+  </div>
+  </div>
+
+  <div class="card setup" id="setupBox" style="display:none">
+    <h2>📥 Từ vựng</h2>
+    <div class="setup-hint">
+      Mỗi dòng là <b>MỘT từ hoặc MỘT cụm từ có nghĩa</b> — đừng tách nhỏ cụm từ ra từng chữ.<br>
+      Ví dụ đúng: cụm 3 chữ <code>留学生</code> viết nguyên trên 1 dòng, không tách thành <code>留</code> / <code>学</code> / <code>生</code>.<br>
+      Có thể viết mỗi từ 1 dòng, hoặc cách nhau bằng dấu cách trên cùng 1 dòng — chỉ cần nhập Hán tự, app tự tra pinyin và nghĩa.
+    </div>
+    <textarea id="vocabInput" placeholder="你好 留学生 你
+老师
+学生"></textarea>
+    <div style="display:none">
+      <h2 style="margin-top:16px">📝 Câu ví dụ (để làm "Ghép câu" &amp; "Ngữ pháp")</h2>
+      <div class="setup-hint">Mỗi dòng 1 câu tiếng Trung hoàn chỉnh.</div>
+      <textarea id="sentInput"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
+      <button onclick="processAll()">🎲 Sinh bài tập</button>
+      <button class="ghost" onclick="resetBank()">🗑 Xoá toàn bộ kho</button>
+      <span id="bankInfo" style="margin-left:auto;font-weight:800;color:var(--brown);font-size:.8rem"></span>
+    </div>
+  </div>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <section id="grammar" class="panel active"><div class="card">
+    <h2>1. Ngữ pháp &amp; cách dùng</h2>
+    <div class="progress" id="gProgress"></div>
+    <div class="hanzi" id="gHanzi"></div>
+    <div class="pinyin" id="gPinyin"></div>
+    <div class="meaning" id="gMean"></div>
+    <div id="gTag" style="text-align:center;margin-top:6px"></div>
+    <div id="gSentences" style="margin-top:14px"></div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px">
+      <button onclick="speak(gWord&&gWord.hanzi)">🔊 Nghe</button>
+      <button class="ghost" onclick="gStep(-1)">← Trước</button>
+      <button class="ghost" onclick="gStep(1)">Tiếp →</button>
+    </div>
+  </div></section>
+
+  <section id="flash" class="panel"><div class="card">
+    <h2>2. Flashcard từ vựng</h2>
+    <div class="progress" id="fcProgress"></div>
+    <div class="hanzi" id="fcHanzi"></div>
+    <div id="fcInfo" style="display:none"><div class="pinyin" id="fcPinyin"></div><div class="meaning" id="fcMean"></div></div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px">
+      <button onclick="speak(currentWord&&currentWord.hanzi)">🔊 Nghe</button>
+      <button class="secondary" onclick="toggleInfo()">👀 Hiện/ẩn nghĩa</button>
+      <button class="ghost" onclick="fcStep(-1)">← Trước</button>
+      <button class="ghost" onclick="fcStep(1)">Tiếp →</button>
+    </div>
+    <div style="text-align:center;margin-top:14px">
+      <button class="secondary" id="playAllBtn" onclick="playAll()">▶️ Đọc cả danh sách (có nghỉ)</button>
+      <button class="ghost" onclick="stopPlayAll()">⏹ Dừng</button>
+    </div>
+  </div></section>
+
+  <section id="listen" class="panel"><div class="card">
+    <h2>3. Nghe chọn nghĩa</h2>
+    <p>Bấm loa nghe từng từ, chọn nghĩa đúng. Cuộn xuống để làm câu tiếp theo.</p>
+    <div id="listenList"></div>
+  </div></section>
+
+  <section id="choose" class="panel"><div class="card">
+    <h2>4. Chọn pinyin</h2>
+    <p>Cuộn xuống để làm câu tiếp theo.</p>
+    <div id="chooseList"></div>
+  </div></section>
+
+  <section id="type" class="panel"><div class="card">
+    <h2>5. Gõ pinyin</h2>
+    <p>Cuộn xuống để làm câu tiếp theo.</p>
+    <div id="typeList"></div>
+  </div></section>
+
+  <section id="sentence" class="panel"><div class="card">
+    <h2>6. Ghép câu (điền chỗ trống)</h2>
+    <p>Cuộn xuống để làm câu tiếp theo.</p>
+    <div id="sentenceList"></div>
+  </div></section>
+
+  <section id="write" class="panel"><div class="card">
+    <h2>7. Rèn viết chữ Hán</h2>
+    <div class="progress" id="wProgress"></div>
+    <h3 id="writeTitle" style="text-align:center"></h3>
+    <p class="meaning" id="writeInfo"></p>
+    <div id="writerBoxes" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:10px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px">
+      <button onclick="startWriteQuiz()">✏️ Viết lại từ đầu</button>
+      <button class="ghost" onclick="writeStep(-1)">← Chữ trước</button>
+      <button class="secondary" onclick="writeStep(1)">Chữ tiếp theo →</button>
+      <button class="ghost" onclick="speak(writeWord&&writeWord.hanzi)">🔊 Nghe</button>
+    </div>
+  </div></section>
+
+  <section id="list" class="panel"><div class="card">
+    <h2>8. Toàn bộ từ vựng</h2>
+    <div id="wordList"></div>
+  </div></section>
+</div>
+
+<script>
+const BANK_KEY='lyls_vocab_v3', SENT_KEY='lyls_sent_v3';
+const DEFAULT_SENTENCES = `你好！
+你好吗？
+我很好，谢谢你。
+你是老师吗？
+我不是老师，我是学生。
+他是留学生。
+你叫什么名字？
+我叫大卫。
+很高兴认识你。
+她也是学生。
+我们是同学。
+你姓什么？
+我姓王。
+来，我介绍一下。
+不客气。
+他也很高兴。
+你们是同学吗？
+我们不是老师。
+她姓什么？
+她姓李。
+你也是留学生吗？
+我也很高兴认识你。
+老师，您好！
+同学们好！
+我来介绍一下我的老师。`;
+
+const GRAMMAR_NOTES = {
+  '是': {title:'Câu chữ 是 – "是"字句', desc:'Dùng 是 làm vị ngữ để phán đoán hoặc giới thiệu người, nghề nghiệp và thân phận.', patterns:['主语 + 是 + 名词','主语 + 不是 + 名词','主语 + 是 + 名词 + 吗？']},
+  '吗': {title:'Câu hỏi có/không với 吗 – 吗字句', desc:'Đặt 吗 ở CUỐI câu trần thuật để biến thành câu hỏi có/không.', patterns:['陈述句 + 吗？','你是学生 → 你是学生吗？']},
+  '不': {title:'Phủ định với 不 – 不字句', desc:'不 đặt TRƯỚC động từ hoặc tính từ để phủ định.', patterns:['主语 + 不 + 动词/形容词','我不是老师。']},
+  '呢': {title:'Câu hỏi tỉnh lược với 呢', desc:'Dùng để hỏi lại một điều tương tự dựa vào câu/ngữ cảnh trước đó.', patterns:['A，主语 + 呢？','我很好，你呢？']},
+  '也': {title:'Phó từ 也 (cũng)', desc:'也 đặt trước động từ/tính từ, sau chủ ngữ.', patterns:['主语 + 也 + 动词/形容词','他也是学生。']},
+  '的': {title:'Trợ từ 的 (sở hữu / định ngữ)', desc:'的 nối định ngữ với danh từ trung tâm phía sau.', patterns:['定语 + 的 + 名词','我的老师。']},
+  '们': {title:'Hậu tố số nhiều 们', desc:'Gắn sau đại từ nhân xưng hoặc danh từ chỉ người để chỉ số nhiều.', patterns:['代词/名词 + 们','我们、你们、同学们']},
+  '叫': {title:'Câu giới thiệu tên với 叫', desc:'Dùng khi nói hoặc hỏi tên của ai đó.', patterns:['主语 + 叫 + 名字','你叫什么名字？']},
+  '很': {title:'Câu chữ 很 với tính từ', desc:'很 đứng trước tính từ; trong câu khẳng định thường bắt buộc có 很 dù ý nghĩa nhấn mạnh không nhiều.', patterns:['主语 + 很 + 形容词','我很好。']},
+  '什么': {title:'Đại từ nghi vấn 什么', desc:'Dùng để hỏi về sự vật hoặc thông tin (cái gì / gì).', patterns:['……+ 什么 + ……？','你叫什么名字？']},
+  '姓': {title:'Câu hỏi họ với 姓', desc:'姓 dùng riêng để nói hoặc hỏi HỌ (không dùng cho tên đầy đủ).', patterns:['主语 + 姓 + 姓氏','你姓什么？我姓王。']},
+  '来': {title:'来 mở đầu hành động', desc:'来 dùng để mời gọi hoặc mở đầu một hành động sắp làm, mang sắc thái thân mật.', patterns:['来，+ 动词短语','来，我介绍一下。']},
+  '一下': {title:'一下 giảm nhẹ ngữ khí', desc:'Đặt sau động từ để chỉ một động tác ngắn, nhẹ nhàng.', patterns:['动词 + 一下','介绍一下、看一下']},
+  '介绍': {title:'Động từ 介绍 (giới thiệu)', desc:'Dùng khi giới thiệu người hoặc sự việc.', patterns:['介绍 + 对象','我来介绍一下。']},
+  '谢谢': {title:'谢谢 (cảm ơn)', desc:'Dùng độc lập hoặc kèm đối tượng được cảm ơn.', patterns:['谢谢 + (你/您)','谢谢你！']},
+  '不客气': {title:'不客气 (đáp lại lời cảm ơn)', desc:'Cụm cố định dùng để đáp lại lời cảm ơn, tương đương "không có gì".', patterns:['A：谢谢！ B：不客气。']}
+};
+function grammarNoteFor(hanzi){ return GRAMMAR_NOTES[hanzi] || null; }
+
+let vocab = JSON.parse(localStorage.getItem(BANK_KEY)||'[]');
+let sentencePool = JSON.parse(localStorage.getItem(SENT_KEY)||'[]');
+sentencePool.forEach(s=>{ if(!s.pinyin && typeof pinyinPro!=='undefined') s.pinyin = pinyinPro.pinyin(s.text, {toneType:'symbol'}); });
+let score=0, totalDone=0, totalCorrect=0, totalWrong=0, fcIndex=0, gIndex=0, writeIndex=0;
+let currentWord=null, gWord=null, writeWord=null;
+let voices=[], writer=null, playAllTimer=null, playAllStop=false;
+const $=id=>document.getElementById(id);
+const panels=[['grammar','Ngữ pháp'],['flash','Flashcard'],['listen','Nghe chọn nghĩa'],['choose','Chọn pinyin'],['type','Gõ pinyin'],['sentence','Ghép câu'],['write','Rèn viết'],['list','Từ vựng']];
+
+function toggleSetup(){ const b=$('setupBox'); b.style.display = b.style.display==='none'?'block':'none'; if(!$('sentInput').value) $('sentInput').value = DEFAULT_SENTENCES; }
+function updateBankInfo(){ const batches=new Set(vocab.map(w=>w.batch)).size; $('bankInfo').innerText = `Kho: ${vocab.length} từ, ${sentencePool.length} câu (${batches} đợt)`; }
+function saveBank(){ localStorage.setItem(BANK_KEY, JSON.stringify(vocab)); localStorage.setItem(SENT_KEY, JSON.stringify(sentencePool)); updateBankInfo(); }
+function resetBank(){ if(!confirm('Xoá toàn bộ kho từ vựng và câu ví dụ?')) return; vocab=[]; sentencePool=[]; saveBank(); refreshAll(); }
+
+async function fetchTranslate(text){
+  try{
+    const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=vi&dt=t&q=${encodeURIComponent(text)}`);
+    const data = await res.json();
+    return (data?.[0]?.map(p=>p[0]).join('')) || 'Đang cập nhật';
+  }catch(e){ return 'Đang cập nhật'; }
+}
+const toneMap={'ā':'a','á':'a','ǎ':'a','à':'a','ē':'e','é':'e','ě':'e','è':'e','ī':'i','í':'i','ǐ':'i','ì':'i','ō':'o','ó':'o','ǒ':'o','ò':'o','ū':'u','ú':'u','ǔ':'u','ù':'u','ǖ':'v','ǘ':'v','ǚ':'v','ǜ':'v','ü':'v'};
+function toPlain(py){ return (py||'').toLowerCase().replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜü]/g,m=>toneMap[m]).replace(/[^a-zv ]+/g,'').trim(); }
+
+async function generateSentencesForWords(words){
+  try{
+    const res = await fetch('/.netlify/functions/generate-sentence', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({words})
+    });
+    const data = await res.json();
+    if(!res.ok){ console.warn('Sinh câu AI lỗi:', data.error); return {sentences:[], error:data.error}; }
+    return {sentences: data.sentences||[], error:null};
+  }catch(e){ return {sentences:[], error:String(e)}; }
+}
+
+async function processAll(){
+  const rawV = $('vocabInput').value.trim();
+  const rawS = $('sentInput').value.trim();
+  if(!rawV && vocab.length===0){ alert('Bạn chưa nhập từ vựng nào.'); return; }
+  const batch = new Date().toLocaleDateString('vi-VN');
+  if(rawV){
+    const tokens = rawV.split(/[\n\s]+/).map(t=>t.trim()).filter(Boolean);
+    for(const hanzi of tokens){
+      const pinyin = (typeof pinyinPro!=='undefined') ? pinyinPro.pinyin(hanzi, {toneType:'symbol'}) : '';
+      const vi = await fetchTranslate(hanzi);
+      const entry = {hanzi, pinyin, plain: toPlain(pinyin), vi, batch};
+      const idx = vocab.findIndex(w=>w.hanzi===hanzi);
+      if(idx>-1) vocab[idx] = {...vocab[idx], ...entry, batch: vocab[idx].batch};
+      else vocab.push(entry);
+    }
+  }
+  if(rawS){
+    const existingTexts = new Set(sentencePool.map(s=>s.text));
+    for(const line of rawS.split('\n').map(l=>l.trim()).filter(Boolean)){
+      if(existingTexts.has(line)) continue;
+      const vi = await fetchTranslate(line);
+      const pinyin = (typeof pinyinPro!=='undefined') ? pinyinPro.pinyin(line, {toneType:'symbol'}) : '';
+      sentencePool.push({text: line, vi, pinyin});
+    }
+  }
+  // Từ nào chưa có câu ví dụ nào chứa nó -> nhờ AI tự đặt câu
+  const needSentence = vocab.filter(w=>!sentencePool.some(s=>s.text.includes(w.hanzi))).map(w=>w.hanzi);
+  let aiInfo = '';
+  if(needSentence.length>0){
+    $('bankInfo').innerText = `Đang nhờ AI đặt câu cho ${needSentence.length} từ...`;
+    const {sentences, error} = await generateSentencesForWords(needSentence);
+    if(error){ aiInfo = ' (AI chưa hoạt động — xem hướng dẫn cấu hình bên dưới)'; }
+    for(const g of sentences){
+      if(!g.sentence || sentencePool.some(s=>s.text===g.sentence)) continue;
+      const pinyin = (typeof pinyinPro!=='undefined') ? pinyinPro.pinyin(g.sentence, {toneType:'symbol'}) : '';
+      const vi = await fetchTranslate(g.sentence);
+      sentencePool.push({text:g.sentence, vi, pinyin});
+    }
+    if(!error) aiInfo = ` (AI vừa tự tạo ${sentences.length} câu mới)`;
+  }
+  saveBank();
+  refreshAll();
+  if(aiInfo) $('bankInfo').innerText += aiInfo;
+}
+
+function refreshAll(){
+  score=0; totalDone=0; totalCorrect=0; totalWrong=0;
+  $('score').innerText=0; $('doneCount').innerText=0; $('correctCount').innerText=0; $('wrongCount').innerText=0;
+  if(vocab.length===0){ showEmptyStates(); return; }
+  fcIndex=0; gIndex=0; writeIndex=0;
+  renderGrammar(); renderFlash(); renderListenList(); renderChooseList(); renderTypeList(); renderSentenceList(); renderWrite(); renderList();
+}
+function showEmptyStates(){
+  const msg='<div class="empty">Chưa có từ vựng. Bấm "⚙️ Quản lý từ vựng" để thêm.</div>';
+  $('gHanzi').innerText=''; $('gPinyin').innerText=''; $('gMean').innerHTML=msg; $('gSentences').innerHTML=''; $('gTag').innerHTML='';
+  $('fcHanzi').innerText=''; $('fcInfo').style.display='none';
+  $('listenList').innerHTML=msg;
+  $('chooseList').innerHTML=msg;
+  $('typeList').innerHTML=msg;
+  $('sentenceList').innerHTML=msg;
+  $('writeTitle').innerText=''; $('writeInfo').innerHTML=''; $('writerBoxes').innerHTML='';
+  $('wordList').innerHTML=msg;
+}
+
+function initTabs(){ $('tabs').innerHTML = panels.map((p,i)=>`<button class="tab ${i===0?'active':''}" data-id="${p[0]}" onclick="showPanel('${p[0]}',this)">${p[1]}</button>`).join(''); }
+function showPanel(id,btn){
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  stopPlayAll();
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  $(id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  if(id==='write') setTimeout(()=>startWriteQuiz(),50);
+}
+
+function loadVoices(){ voices = speechSynthesis.getVoices().filter(v=>/zh|Chinese|Mandarin/i.test(v.lang+v.name)); }
+if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+function speak(text, onend){
+  if(!text) return;
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang='zh-CN'; u.rate=parseFloat($('rateSelect').value);
+  const vi = parseInt($('voiceSelect').value)||0;
+  if(voices[vi]) u.voice=voices[vi];
+  if(onend) u.onend=onend;
+  speechSynthesis.speak(u);
+}
+function addScore(n=10){ score+=n; $('score').innerText=score; }
+function recordAnswer(isCorrect, points=10){
+  totalDone++;
+  if(isCorrect){ totalCorrect++; addScore(points); }
+  else{ totalWrong++; }
+  $('doneCount').innerText=totalDone; $('correctCount').innerText=totalCorrect; $('wrongCount').innerText=totalWrong;
+}
+function sample(arr,n){ return [...arr].sort(()=>Math.random()-.5).slice(0,n); }
+function shuffleAll(){ if(vocab.length===0) return; renderListenList(); renderChooseList(); renderTypeList(); renderSentenceList(); renderFlash(); renderGrammar(); }
+
+// ---- Ngữ pháp ----
+let gRelatedCache=[];
+function renderGrammar(){
+  gWord = vocab[gIndex];
+  $('gProgress').innerText = `${gIndex+1} / ${vocab.length}`;
+  $('gHanzi').innerText = gWord.hanzi;
+  $('gPinyin').innerText = gWord.pinyin;
+  $('gMean').innerHTML = gWord.vi;
+  $('gTag').innerHTML = `<span class="tag">${gWord.hanzi.length===1?'Từ đơn (1 âm tiết)':'Từ ghép / cụm từ ('+gWord.hanzi.length+' âm tiết)'}</span>`;
+  const note = grammarNoteFor(gWord.hanzi);
+  const noteHtml = note
+    ? `<div class="gp-box"><div class="gp-title">📖 ${note.title}</div><div class="gp-desc">${note.desc}</div>${note.patterns.map(p=>`<div class="gp-pattern">${p}</div>`).join('')}</div>`
+    : `<div style="color:#a3937c;font-size:.85rem;margin-top:10px">Chưa có ghi chú ngữ pháp riêng cho từ này trong kho — xem cách dùng qua các câu ví dụ bên dưới.</div>`;
+  const related = sentencePool.filter(s=>s.text.includes(gWord.hanzi)).slice(0,5);
+  gRelatedCache = related;
+  const sentHtml = related.length
+    ? '<div style="font-weight:800;color:var(--earth);margin:12px 0 6px">Ví dụ trong câu (' + related.length + '):</div>' + related.map((s,i)=>`<div style="background:#fff7e4;border:1px dashed #d98629;border-radius:12px;padding:10px;margin-bottom:8px;font-size:17px">${s.text} <button class="mini-btn ghost" onclick="speak(gRelatedCache[${i}].text)">🔊</button><br><span style="font-size:.85rem;color:var(--deep);font-weight:700">${s.pinyin||''}</span><br><span style="font-size:.82rem;color:#7b270b">${s.vi}</span></div>`).join('')
+    : '<div style="color:#a3937c;font-size:.85rem;margin-top:8px">Chưa có câu ví dụ nào chứa từ này trong kho câu.</div>';
+  $('gSentences').innerHTML = noteHtml + sentHtml;
+}
+function gStep(d){ gIndex=(gIndex+d+vocab.length)%vocab.length; renderGrammar(); }
+
+// ---- Flashcard ----
+function renderFlash(){
+  currentWord = vocab[fcIndex];
+  $('fcProgress').innerText = `${fcIndex+1} / ${vocab.length}`;
+  $('fcHanzi').innerText = currentWord.hanzi;
+  $('fcPinyin').innerText = currentWord.pinyin;
+  $('fcMean').innerHTML = currentWord.vi;
+}
+function toggleInfo(){ const el=$('fcInfo'); el.style.display = el.style.display==='none'?'block':'none'; }
+function fcStep(d){ fcIndex=(fcIndex+d+vocab.length)%vocab.length; $('fcInfo').style.display='none'; renderFlash(); }
+function playAll(){
+  playAllStop=false;
+  $('fcInfo').style.display='block';
+  let i=fcIndex;
+  function step(){
+    if(playAllStop) return;
+    fcIndex=i%vocab.length; renderFlash();
+    speak(currentWord.hanzi, ()=>{ if(playAllStop) return; playAllTimer=setTimeout(()=>{ i++; if(i<fcIndex+vocab.length && !playAllStop) step(); }, 900); });
+  }
+  step();
+}
+function stopPlayAll(){ playAllStop=true; if(playAllTimer) clearTimeout(playAllTimer); if('speechSynthesis' in window) speechSynthesis.cancel(); }
+
+// ---- Nghe chọn nghĩa (danh sách, cuộn để làm câu tiếp theo) ----
+function renderListenList(){
+  const order = sample(vocab, vocab.length);
+  $('listenList').innerHTML = order.map((w,i)=>{
+    const opts = sample(vocab.filter(x=>x!==w), Math.min(3,vocab.length-1)).concat(w).sort(()=>Math.random()-.5);
+    return `<div class="qcard">
+      <div class="qhead">${i+1}. <button class="mini-btn" onclick="speak('${w.hanzi}')">🔊 Nghe từ</button></div>
+      <div class="options">${opts.map(o=>`<button class="option" onclick="answerListen(this,'${w.hanzi}','${w.pinyin}','${o.hanzi}')">${o.vi}</button>`).join('')}</div>
+      <div class="feedback"></div>
+    </div>`;
+  }).join('');
+}
+function answerListen(btn,correctHanzi,correctPinyin,chosenHanzi){
+  const card = btn.closest('.qcard');
+  if(card.dataset.answered) return;
+  card.dataset.answered='1';
+  const wordObj = vocab.find(w=>w.hanzi===correctHanzi);
+  card.querySelectorAll('.option').forEach(b=>b.disabled=true);
+  const fb = card.querySelector('.feedback');
+  if(chosenHanzi===correctHanzi){
+    btn.classList.add('correct');
+    fb.innerHTML = `🎉 Chính xác! <b>${correctHanzi}</b> (${correctPinyin}) = ${wordObj?wordObj.vi:''}`;
+    recordAnswer(true,10);
+  }else{
+    btn.classList.add('wrong');
+    fb.innerHTML = `❌ Chưa đúng. Đáp án đúng: <b>${correctHanzi}</b> (${correctPinyin}) = ${wordObj?wordObj.vi:''}`;
+    recordAnswer(false);
+  }
+}
+
+// ---- Chọn pinyin (danh sách, cuộn để làm câu tiếp theo) ----
+function renderChooseList(){
+  const order = sample(vocab, vocab.length);
+  $('chooseList').innerHTML = order.map((w,i)=>{
+    const opts = sample(vocab.filter(x=>x!==w), Math.min(3,vocab.length-1)).map(x=>x.pinyin).concat(w.pinyin).sort(()=>Math.random()-.5);
+    return `<div class="qcard">
+      <div class="qhead">${i+1}. <span class="qhanzi">${w.hanzi}</span> <span style="font-weight:400">— ${w.vi}</span></div>
+      <div class="options">${opts.map(o=>`<button class="option" onclick="answerChoose(this,'${w.hanzi}','${o}','${w.pinyin}','${w.vi.replace(/'/g,"\\'")}')">${o}</button>`).join('')}</div>
+      <div class="feedback"></div>
+    </div>`;
+  }).join('');
+}
+function answerChoose(btn,hanzi,chosen,correctPinyin,vi){
+  const card = btn.closest('.qcard');
+  if(card.dataset.answered) return;
+  card.dataset.answered='1';
+  card.querySelectorAll('.option').forEach(b=>b.disabled=true);
+  const fb = card.querySelector('.feedback');
+  if(chosen===correctPinyin){ btn.classList.add('correct'); fb.innerHTML=`🎊 Đúng rồi! <b>${hanzi}</b> (${correctPinyin}) = ${vi}`; recordAnswer(true,10); }
+  else{ btn.classList.add('wrong'); fb.innerHTML=`❌ Đáp án đúng: <b>${correctPinyin}</b> (${hanzi} = ${vi})`; recordAnswer(false); }
+}
+
+// ---- Gõ pinyin (danh sách, cuộn để làm câu tiếp theo) ----
+function renderTypeList(){
+  const order = sample(vocab, vocab.length);
+  $('typeList').innerHTML = order.map((w,i)=>`<div class="qcard">
+      <div class="qhead">${i+1}. <span class="qhanzi">${w.hanzi}</span> <span style="font-weight:400">— ${w.vi}</span></div>
+      <input type="text" id="typeIn-${i}" style="width:100%;margin:6px 0" placeholder="Nhập pinyin có dấu hoặc không dấu, ví dụ: ni hao">
+      <button onclick="answerType(this,'${i}','${w.pinyin}','${w.plain}')">Kiểm tra</button>
+      <div class="feedback"></div>
+    </div>`).join('');
+}
+function answerType(btn,i,pinyin,plain){
+  const card = btn.closest('.qcard');
+  if(card.dataset.answered) return;
+  const input = $(`typeIn-${i}`);
+  const ans = toPlain(input.value);
+  const ok = [toPlain(pinyin), plain].includes(ans);
+  card.dataset.answered='1';
+  input.disabled=true; btn.disabled=true;
+  const fb = card.querySelector('.feedback');
+  if(ok){ fb.innerText='🌟 Chính xác! '+pinyin; recordAnswer(true,10); }
+  else{ fb.innerText='❌ Chưa đúng. Đáp án: '+pinyin; recordAnswer(false); }
+}
+
+// ---- Ghép câu: danh sách điền chỗ trống, mỗi câu có pinyin + nghĩa đáp án ----
+// Tách câu thành từng "từ" dựa theo kho từ vựng đã biết (khớp từ dài nhất trước),
+// chữ nào không nằm trong kho thì tách theo từng chữ đơn.
+function tokenizeSentence(text, vocabWords){
+  const sorted = [...vocabWords].filter(Boolean).sort((a,b)=>b.length-a.length);
+  const tokens=[]; let i=0;
+  while(i<text.length){
+    const ch = text[i];
+    if(/[\p{Script=Han}]/u.test(ch)){
+      let matched=null;
+      for(const w of sorted){ if(text.substr(i,w.length)===w){ matched=w; break; } }
+      if(matched){ tokens.push(matched); i+=matched.length; }
+      else { tokens.push(ch); i+=1; }
+    } else if(/[a-zA-Z]/.test(ch)){
+      let j=i; while(j<text.length && /[a-zA-Z]/.test(text[j])) j++;
+      tokens.push(text.slice(i,j)); i=j;
+    } else if(/[，。！？、]/.test(ch)){ tokens.push(ch); i++; }
+    else { i++; }
+  }
+  return tokens;
+}
+function renderSentenceList(){
+  if(sentencePool.length===0){ $('sentenceList').innerHTML='<div class="empty">Chưa có câu ví dụ.</div>'; return; }
+  const vocabWords = vocab.map(w=>w.hanzi);
+  $('sentenceList').innerHTML = sentencePool.map((s,i)=>{
+    const tokens = tokenizeSentence(s.text, vocabWords);
+    const hanTokens = tokens.filter(t=>/[\p{Script=Han}]/u.test(t));
+    if(hanTokens.length===0) return '';
+    const blankTok = sample(hanTokens,1)[0];
+    let used=false;
+    const displayTokens = tokens.map(t=>{ if(t===blankTok && !used){ used=true; return '____'; } return t; });
+    const distractPool = vocabWords.filter(w=>w!==blankTok);
+    const opts = sample(distractPool, Math.min(3,distractPool.length)).concat(blankTok).sort(()=>Math.random()-.5);
+    return `<div class="qcard">
+      <div class="qhead">${i+1}. <button class="mini-btn" onclick="speak('${s.text}')">🔊 Nghe câu mẫu</button></div>
+      <div class="hanzi" id="sh-${i}" style="font-size:28px">${displayTokens.join('')}</div>
+      <div class="feedback" id="se-${i}" style="margin-top:6px"></div>
+      <div class="options">${opts.map(o=>`<button class="option" onclick="answerSentence(this,${i},'${blankTok}','${o}','${s.text.replace(/'/g,"\\'")}','${(s.pinyin||'').replace(/'/g,"\\'")}','${s.vi.replace(/'/g,"\\'")}')">${o}</button>`).join('')}</div>
+      <div class="feedback"></div>
+    </div>`;
+  }).join('');
+}
+function answerSentence(btn,i,correct,chosen,fullText,pinyin,vi){
+  const card = btn.closest('.qcard');
+  if(card.dataset.answered) return;
+  card.dataset.answered='1';
+  card.querySelectorAll('.option').forEach(b=>b.disabled=true);
+  const fb = card.querySelector('.feedback:last-child');
+  const extra = $(`se-${i}`);
+  const hz = $(`sh-${i}`);
+  hz.innerText = fullText;
+  extra.innerHTML = `<span style="color:var(--deep);font-weight:700">${pinyin}</span><br><span style="font-size:.85rem;color:#7b270b">Nghĩa cả câu: ${vi}</span>`;
+  if(chosen===correct){
+    btn.classList.add('correct');
+    fb.innerText='🎉 Chính xác!';
+    recordAnswer(true,15);
+  }else{
+    btn.classList.add('wrong');
+    fb.innerText = '❌ Chưa đúng. Đáp án đúng: '+correct;
+    recordAnswer(false);
+  }
+}
+
+// ---- Rèn viết (dùng HanziWriter thật, có chấm điểm, hiện đủ các chữ trong cụm) ----
+function renderWrite(){
+  writeWord = vocab[writeIndex];
+  $('wProgress').innerText = `${writeIndex+1} / ${vocab.length}`;
+  $('writeTitle').innerText = writeWord.hanzi+' • '+writeWord.pinyin;
+  $('writeInfo').innerHTML = writeWord.vi;
+  startWriteQuiz();
+}
+function startWriteQuiz(){
+  if(!writeWord) return;
+  const chars = writeWord.hanzi.split('');
+  $('writerBoxes').innerHTML = chars.map((c,i)=>`<div class="writer-mini">
+      <div id="wt-${i}"></div>
+      <div class="feedback" id="wtfb-${i}" style="font-size:.8rem;min-height:22px"></div>
+    </div>`).join('');
+  chars.forEach((c,i)=>{
+    const w = HanziWriter.create(`wt-${i}`, c, {
+      width:170, height:170, padding:8,
+      showOutline:true, strokeAnimationSpeed:1, delayBetweenStrokes:200
+    });
+    w.quiz({
+      onMistake: ()=>{ $(`wtfb-${i}`).innerHTML = '<span style="color:#c0392b;font-weight:900">❌ Sai nét!</span>'; },
+      onCorrectStroke: ()=>{ if(!$(`wtfb-${i}`).dataset.done) $(`wtfb-${i}`).innerHTML = '<span style="color:var(--green)">✔️</span>'; },
+      onComplete: (summary)=>{
+        addScore(20);
+        $(`wtfb-${i}`).dataset.done='1';
+        $(`wtfb-${i}`).innerHTML = `<span style="color:var(--green);font-weight:900">✅ Xong (sai ${summary.totalMistakes})</span>`;
+      }
+    });
+  });
+}
+function writeStep(d){ writeIndex=(writeIndex+d+vocab.length)%vocab.length; renderWrite(); }
+
+// ---- Từ vựng ----
+function renderList(){
+  const byBatch = {};
+  vocab.forEach(w=>{ (byBatch[w.batch]=byBatch[w.batch]||[]).push(w); });
+  let html='';
+  Object.keys(byBatch).forEach(b=>{
+    html += `<div class="batch-title">📅 Đợt ${b} (${byBatch[b].length} từ)</div><div class="word-grid">`;
+    html += byBatch[b].map(w=>`<div class="word" onclick="speak('${w.hanzi}')"><b>${w.hanzi}</b><small>${w.pinyin}</small><div style="font-size:.8rem">${w.vi}</div></div>`).join('');
+    html += '</div>';
+  });
+  $('wordList').innerHTML = html;
+}
+
+initTabs();
+updateBankInfo();
+if(!$('sentInput').value.trim()) $('sentInput').value = DEFAULT_SENTENCES;
+if(vocab.length>0) refreshAll(); else showEmptyStates();
+</script>
+</body>
+</html>
