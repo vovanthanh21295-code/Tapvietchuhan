@@ -576,18 +576,49 @@
       } catch (e) { return name; }
     }
 
+    let lastAiError = '';
+
+    // Hiện 1 dòng chữ nhỏ báo lý do khi AI lỗi (tự biến mất khi AI chạy lại bình thường)
+    function showAiNote(msg) {
+      const anchor = document.getElementById('sentenceTranslation');
+      let el = document.getElementById('aiErrNote');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'aiErrNote';
+        el.style.cssText = 'font-size:0.62rem;color:#a33;margin-top:3px;text-align:center;word-break:break-word;';
+        anchor.insertAdjacentElement('afterend', el);
+      }
+      el.textContent = msg || '';
+    }
+
     async function aiTranslate(text) {
+      lastAiError = '';
       try {
         const res = await fetch('/.netlify/functions/translate-sentence', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text })
         });
-        if (!res.ok) return null;
-        const data = await res.json();
-        if (!data || !data.chinese) return null;
+        const raw = await res.text();
+        let data = null;
+        try { data = JSON.parse(raw); } catch (e) {}
+        if (!res.ok || !data || !data.chinese) {
+          console.warn('AI dịch lỗi:', res.status, raw);
+          let detail = '';
+          if (data && Array.isArray(data.attempts)) {
+            detail = data.attempts.map(a => `${a.api}/${a.model}: ${a.status || a.error}`).join(' | ');
+          } else if (data && data.error) {
+            detail = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+          }
+          lastAiError = `HTTP ${res.status}${detail ? ' - ' + detail : ''}`.slice(0, 260);
+          return null;
+        }
         return data;
-      } catch (e) { return null; }
+      } catch (e) {
+        console.warn('AI dịch lỗi:', e);
+        lastAiError = String(e).slice(0, 200);
+        return null;
+      }
     }
 
     async function processInput() {
@@ -598,6 +629,7 @@
       const ai = await aiTranslate(inputVal);
 
       if (ai) {
+        showAiNote('');
         currentChineseText = ai.chinese;
         document.getElementById('sentenceTranslation').innerText = ai.vietnamese
           ? `Nghĩa cả câu: "${ai.vietnamese}"`
@@ -608,6 +640,7 @@
 
       // AI không gọi được (mạng lỗi, chưa deploy, hết quota...) -> dùng cách cũ (Google Translate) để app vẫn chạy
       document.getElementById('sentenceTranslation').innerText = "AI chưa phản hồi, dùng bản dịch dự phòng...";
+      showAiNote('AI lỗi: ' + lastAiError);
       const hasHan = /\p{Script=Han}/u.test(inputVal);
       const hasLatin = new RegExp(LATIN_SRC, 'i').test(inputVal);
 
