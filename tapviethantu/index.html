@@ -35,12 +35,21 @@
       width: 100%;
       max-width: 580px;
       background-color: var(--bg-color);
-      padding: 4px 0;
+      padding: 4px 0 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid rgba(214, 203, 184, 0.5);
+      box-shadow: 0 4px 6px -4px rgba(0,0,0,0.08);
+    }
+
+    .brand-row {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      border-bottom: 1px solid rgba(214, 203, 184, 0.5);
+      width: 100%;
     }
 
     .brand-logo-img {
@@ -118,7 +127,8 @@
       gap: 8px;
       width: 100%;
       max-width: 580px;
-      margin-bottom: 8px;
+      box-sizing: border-box;
+      padding: 0 10px;
     }
 
     input[type="text"] {
@@ -145,7 +155,7 @@
 
     .overview-sticky-box {
       position: sticky;
-      top: 65px;
+      top: 118px;
       z-index: 990;
       width: 100%;
       max-width: 580px;
@@ -237,6 +247,10 @@
     .char-card .pinyin { color: var(--primary-red); font-weight: bold; font-size: 0.65rem; }
     .mini-char-display { font-size: 1.1rem; font-weight: bold; line-height: 1; margin: 1px 0; color: #333; }
     .char-card .meaning { font-size: 0.58rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .char-card.phrase-card { width: auto; min-width: 64px; max-width: 150px; padding: 4px 8px; }
+    .char-card.phrase-card .pinyin { font-size: 0.72rem; text-align: center; }
+    .char-card.phrase-card .mini-char-display { font-size: 1.35rem; margin: 2px 0; }
+    .char-card.phrase-card .meaning { font-size: 0.72rem; white-space: normal; text-align: center; line-height: 1.25; overflow: visible; }
 
     .btn-brown {
       background-color: var(--btn-brown);
@@ -371,13 +385,19 @@
 <body>
 
   <div class="brand-header-sticky">
-    <div class="brand-logo-img">
-      <span class="logo-curve-top">Lớp Hán Ngữ</span>
-      <span class="logo-center-text">Nihao</span>
-      <span class="logo-chinese">你好</span>
-      <span class="logo-curve-bottom">Lingyuan Laoshi</span>
+    <div class="brand-row">
+      <div class="brand-logo-img">
+        <span class="logo-curve-top">Lớp Hán Ngữ</span>
+        <span class="logo-center-text">Nihao</span>
+        <span class="logo-chinese">你好</span>
+        <span class="logo-curve-bottom">Lingyuan Laoshi</span>
+      </div>
+      <h1 class="brand-title">Lingyuan Laoshi</h1>
     </div>
-    <h1 class="brand-title">Lingyuan Laoshi</h1>
+    <div class="input-container">
+      <input type="text" id="charInput" value="我" placeholder="Nhập tiếng Trung hoặc Tiếng Việt..." onkeydown="if(event.key==='Enter') processInput()">
+      <button class="btn-create" onclick="processInput()">Tạo</button>
+    </div>
   </div>
 
   <div class="controls-panel">
@@ -396,11 +416,6 @@
         <option value="1.0" selected>1.0x</option>
       </select>
     </div>
-  </div>
-
-  <div class="input-container">
-    <input type="text" id="charInput" value="我" placeholder="Nhập tiếng Trung hoặc Tiếng Việt..." onkeydown="if(event.key==='Enter') processInput()">
-    <button class="btn-create" onclick="processInput()">Tạo</button>
   </div>
 
   <div class="overview-sticky-box">
@@ -474,9 +489,9 @@
     function highlightCard(idx) {
       const allCards = document.querySelectorAll('.char-card');
       allCards.forEach(c => c.classList.remove('active'));
-      const targetCard = document.getElementById(`mini-card-${idx}`);
-      if (targetCard) {
-        targetCard.classList.add('active');
+      for (const c of allCards) {
+        const st = parseInt(c.dataset.start), en = parseInt(c.dataset.end);
+        if (!isNaN(st) && idx >= st && idx <= en) { c.classList.add('active'); break; }
       }
     }
 
@@ -551,14 +566,60 @@
       return text;
     }
 
+    const LATIN_SRC = "[a-zA-Zàáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]+";
+    async function translateNameSegment(name) {
+      try {
+        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q=${encodeURIComponent(name)}`);
+        const data = await res.json();
+        const t = data?.[0]?.[0]?.[0];
+        return (t && t !== 'undefined') ? t : name;
+      } catch (e) { return name; }
+    }
+
+    async function aiTranslate(text) {
+      try {
+        const res = await fetch('/.netlify/functions/translate-sentence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data || !data.chinese) return null;
+        return data;
+      } catch (e) { return null; }
+    }
+
     async function processInput() {
       const inputVal = document.getElementById('charInput').value.trim();
       if (!inputVal) return;
 
-      const isVietnamese = /[a-zA-Zàáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/i.test(inputVal);
+      document.getElementById('sentenceTranslation').innerText = "Đang dịch bằng AI...";
+      const ai = await aiTranslate(inputVal);
 
-      if (isVietnamese) {
-        document.getElementById('sentenceTranslation').innerText = "Đang dịch...";
+      if (ai) {
+        currentChineseText = ai.chinese;
+        document.getElementById('sentenceTranslation').innerText = ai.vietnamese
+          ? `Nghĩa cả câu: "${ai.vietnamese}"`
+          : `Dịch: "${inputVal}" ➔ "${ai.chinese}"`;
+        renderApp(currentChineseText, ai.words || []);
+        return;
+      }
+
+      // AI không gọi được (mạng lỗi, chưa deploy, hết quota...) -> dùng cách cũ (Google Translate) để app vẫn chạy
+      document.getElementById('sentenceTranslation').innerText = "AI chưa phản hồi, dùng bản dịch dự phòng...";
+      const hasHan = /\p{Script=Han}/u.test(inputVal);
+      const hasLatin = new RegExp(LATIN_SRC, 'i').test(inputVal);
+
+      if (hasHan && hasLatin) {
+        const nameRe = new RegExp('^' + LATIN_SRC + '$', 'i');
+        const parts = inputVal.split(new RegExp('(' + LATIN_SRC + ')', 'gi'));
+        for (let i = 0; i < parts.length; i++) {
+          if (nameRe.test(parts[i])) parts[i] = await translateNameSegment(parts[i]);
+        }
+        currentChineseText = parts.join('');
+        translateChineseToViet(currentChineseText);
+      } else if (hasLatin) {
         const translated = await translateFullSentence(inputVal);
         currentChineseText = translated.replace(/[^\p{Script=Han}]/gu, '');
         if (!currentChineseText) currentChineseText = translated;
@@ -568,7 +629,7 @@
         translateChineseToViet(inputVal);
       }
 
-      renderApp(currentChineseText);
+      renderApp(currentChineseText, null);
     }
 
     async function translateChineseToViet(text) {
@@ -611,7 +672,51 @@
       return rules.join(", ");
     }
 
-    function renderApp(chineseStr) {
+    // ===== Tách câu thành CỤM TỪ có nghĩa (khớp từ dài nhất trước) =====
+    const COMMON_WORDS = ['你好','你们','我们','他们','她们','它们','大家','老师','学生','留学生','同学','谢谢','不客气','再见','对不起','没关系','请问','名字','什么','高兴','介绍','一下','认识','喜欢','朋友','中国','越南','美国','英语','汉语','中文','工作','医生','律师','工程师','老板','公司','大学','学校','教室','留学','天气','今天','明天','昨天','时间','早上','晚上','中午','周末','星期','电话','手机','电脑','银行','医院','餐厅','火车','飞机','出租车','地铁','超市','商店','衣服','图书馆','宿舍','食堂','运动','游泳','唱歌','跳舞','旅行','旅游','多少','怎么','为什么','不是','很好','没有','可以','知道','明白','学习','汉字','老公','老婆','爸爸','妈妈','哥哥','姐姐','弟弟','妹妹','孩子','先生','小姐','欢迎','早安','晚安','请坐','请进','漂亮','好看','好吃','好玩','开心','快乐','生日','祝你','谁','哪里','哪儿','这里','那里','这个','那个','现在','已经','还是','或者','因为','所以','但是','如果'];
+    function buildWordDict() {
+      let extra = [];
+      try {
+        const bank = JSON.parse(localStorage.getItem('lyls_vocab_v3') || '[]');
+        extra = bank.map(w => w.hanzi).filter(Boolean);
+      } catch (e) {}
+      return [...new Set(COMMON_WORDS.concat(extra))].filter(w => w.length > 1).sort((a, b) => b.length - a.length);
+    }
+    function segmentPhrases(hanOnly) {
+      const dict = buildWordDict();
+      const phrases = [];
+      let i = 0;
+      while (i < hanOnly.length) {
+        let matched = null;
+        for (const w of dict) { if (hanOnly.startsWith(w, i)) { matched = w; break; } }
+        if (!matched) matched = hanOnly[i];
+        phrases.push({ text: matched, start: i, end: i + matched.length - 1 });
+        i += matched.length;
+      }
+      return phrases;
+    }
+
+    // Ánh xạ các cụm từ do AI trả về vào đúng vị trí chữ trong chuỗi Hán thật sự
+    // hiển thị (hanOnly). Nếu có chữ AI bỏ sót hoặc lệch, tự lấp bằng từng chữ đơn.
+    // Trả về null nếu không khớp được chút nào -> nơi gọi sẽ dùng cách tách cũ.
+    function mapAiWordsToPositions(hanOnly, aiWords) {
+      if (!Array.isArray(aiWords) || aiWords.length === 0) return null;
+      const phrases = [];
+      let i = 0;
+      for (const w of aiWords) {
+        const t = (w && w.text || '').replace(/[^\p{Script=Han}]/gu, '');
+        if (!t) continue;
+        let idx = hanOnly.startsWith(t, i) ? i : hanOnly.indexOf(t, i);
+        if (idx === -1) continue;
+        for (let k = i; k < idx; k++) phrases.push({ text: hanOnly[k], start: k, end: k, meaning: null, pinyin: null });
+        phrases.push({ text: t, start: idx, end: idx + t.length - 1, meaning: w.meaning, pinyin: w.pinyin });
+        i = idx + t.length;
+      }
+      while (i < hanOnly.length) { phrases.push({ text: hanOnly[i], start: i, end: i, meaning: null, pinyin: null }); i++; }
+      return phrases.length ? phrases : null;
+    }
+
+    function renderApp(chineseStr, aiWords) {
       const overviewList = document.getElementById('overviewList');
       const detailContainer = document.getElementById('detailContainer');
 
@@ -624,24 +729,40 @@
       const chars = chineseStr.split('').filter(c => /\p{Script=Han}/u.test(c));
       if (chars.length === 0) return;
 
+      // Tổng quan: ưu tiên cụm từ + nghĩa do AI trả về; nếu không có (AI lỗi) thì
+      // dùng cách tách cũ theo danh sách từ dựng sẵn + dịch Google Translate dự phòng.
+      const hanOnly = chars.join('');
+      const phrases = mapAiWordsToPositions(hanOnly, aiWords) || segmentPhrases(hanOnly);
+      phrases.forEach((ph, pIdx) => {
+        const phPy = ph.pinyin || pinyinPro.pinyin(ph.text, { toneType: 'symbol' });
+        const pcard = document.createElement('div');
+        pcard.className = 'char-card phrase-card';
+        pcard.id = `mini-card-${ph.start}`;
+        pcard.dataset.start = ph.start;
+        pcard.dataset.end = ph.end;
+        pcard.innerHTML = `
+          <div class="pinyin">${phPy}</div>
+          <div class="mini-char-display">${ph.text}</div>
+          <div class="meaning" id="phrase-mean-${pIdx}">${ph.meaning ? ph.meaning : '...'}</div>
+        `;
+        pcard.onclick = () => {
+          highlightCard(ph.start);
+          const target = document.getElementById(`detail-card-${ph.start}`);
+          if (target) target.scrollIntoView({ behavior: 'smooth' });
+        };
+        overviewList.appendChild(pcard);
+        if (!ph.meaning) {
+          fetchMeaning(ph.text).then(mean => {
+            const el = document.getElementById(`phrase-mean-${pIdx}`);
+            if (el) el.textContent = mean;
+          });
+        }
+      });
+
       chars.forEach((char, idx) => {
         const py = pinyinPro.pinyin(char, { toneType: 'numToTone' });
         const pyNum = pinyinPro.pinyin(char, { toneType: 'num' });
         const hanViet = getHanViet(char, pyNum);
-
-        const card = document.createElement('div');
-        card.className = `char-card`;
-        card.id = `mini-card-${idx}`;
-        card.innerHTML = `
-          <div class="pinyin">${py}</div>
-          <div class="mini-char-display">${char}</div>
-          <div class="meaning" id="mini-mean-${idx}">...</div>
-        `;
-        card.onclick = () => {
-          highlightCard(idx);
-          document.getElementById(`detail-card-${idx}`).scrollIntoView({ behavior: 'smooth' });
-        };
-        overviewList.appendChild(card);
 
         const detailCard = document.createElement('div');
         detailCard.className = 'detail-card';
