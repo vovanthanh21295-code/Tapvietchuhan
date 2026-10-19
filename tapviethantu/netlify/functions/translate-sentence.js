@@ -1,7 +1,57 @@
 // Netlify Function: dịch 1 câu (Việt hoặc Trung có xen tên riêng) bằng Gemini,
 // trả về câu tiếng Trung hoàn chỉnh, nghĩa tiếng Việt cả câu, và tách sẵn
-// thành từng CỤM TỪ có nghĩa (kèm pinyin + nghĩa) để khỏi phải tách bằng
-// danh sách từ cứng ở phía trình duyệt.
+// thành từng CỤM TỪ có nghĩa (kèm pinyin + nghĩa).
+
+const MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash'];
+
+// Gọi Gemini: thử Interactions API (chuẩn mới) trước, nếu không được thì thử
+// generateContent (kiểu cũ nhưng Google nói vẫn được hỗ trợ). Ghi lại mã lỗi
+// của từng lần thử để biết chính xác nguyên nhân khi thất bại.
+async function callGemini(apiKey, prompt) {
+  const attempts = [];
+  const headers = { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey };
+
+  async function post(url, body) {
+    const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch (e) { /* body rỗng hoặc không phải JSON */ }
+    return { res, raw, data };
+  }
+
+  // Cách 1: Interactions API
+  try {
+    const { res, raw, data } = await post(
+      'https://generativelanguage.googleapis.com/v1beta2/interactions',
+      { model: MODELS[0], input: prompt }
+    );
+    if (res.ok && data) {
+      const step = (data.steps || []).find(s => s.type === 'model_output');
+      const text = step && step.content && step.content[0] && step.content[0].text;
+      if (text) return { text };
+    }
+    attempts.push({ api: 'interactions', model: MODELS[0], status: res.status, body: raw.slice(0, 300) });
+  } catch (e) {
+    attempts.push({ api: 'interactions', model: MODELS[0], error: String(e) });
+  }
+
+  // Cách 2: generateContent, thử lần lượt từng model
+  for (const model of MODELS) {
+    try {
+      const { res, raw, data } = await post(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        { contents: [{ parts: [{ text: prompt }] }] }
+      );
+      const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+      const text = parts && parts[0] && parts[0].text;
+      if (res.ok && text) return { text };
+      attempts.push({ api: 'generateContent', model, status: res.status, body: raw.slice(0, 300) });
+    } catch (e) {
+      attempts.push({ api: 'generateContent', model, error: String(e) });
+    }
+  }
+  return { error: attempts };
+}
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -22,10 +72,7 @@ exports.handler = async function (event) {
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Server chưa cấu hình GEMINI_API_KEY.' })
-    };
+    return { statusCode: 500, body: JSON.stringify({ error: 'Server chưa cấu hình GEMINI_API_KEY.' }) };
   }
 
   const prompt = `Bạn là trợ lý dịch Việt-Trung cho người học tiếng Hán sơ cấp.
@@ -44,32 +91,18 @@ Chỉ trả về JSON THUẦN (không markdown, không giải thích gì thêm),
 Câu cần xử lý: ${text}`;
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta2/interactions`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey
-      },
-      body: JSON.stringify({
-        model: 'gemini-3.8-flash',
-        input: prompt
-      })
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      return { statusCode: res.status, body: JSON.stringify({ error: data }) };
+    const out = await callGemini(apiKey, prompt);
+    if (out.error) {
+      return { statusCode: 502, body: JSON.stringify({ error: 'Gemini không trả kết quả', attempts: out.error }) };
     }
 
-    const modelStep = (data.steps || []).find(s => s.type === 'model_output');
-    const raw = (modelStep && modelStep.content && modelStep.content[0] && modelStep.content[0].text) || '{}';
-    const clean = raw.replace(/```json/g, '').replace(/```/g, '').trim();
-    let result;
-    try { result = JSON.parse(clean); } catch (e) { result = null; }
+    const clean = out.text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const m = clean.match(/\{[\s\S]*\}/);
+    let result = null;
+    try { result = JSON.parse(m ? m[0] : clean); } catch (e) { result = null; }
 
     if (!result || !result.chinese) {
-      return { statusCode: 502, body: JSON.stringify({ error: 'AI trả về dữ liệu không đọc được', raw: clean }) };
+      return { statusCode: 502, body: JSON.stringify({ error: 'AI trả về dữ liệu không đọc được', raw: clean.slice(0, 300) }) };
     }
 
     return {
